@@ -4,12 +4,12 @@
 use_fame = 1
 #use_mz80 = 1
 
-DEFINC = -I../.. -I. -D__SDL__
+DEFINC = -I../.. -I. -D__SDL__ -include stdint.h
 
 GCC = nspire-gcc
 AS = nspire-gcc
 
-COPT_COMMON = -Dndlib -Ofast -fomit-frame-pointer -fdata-sections -ffunction-sections -marm -march=armv5te -mtune=arm926ej-s -flto
+COPT_COMMON = -Dndlib -O3 -fomit-frame-pointer -fdata-sections -ffunction-sections -marm -march=armv5te -mtune=arm926ej-s -flto -Wno-incompatible-pointer-types
 COPT = $(COPT_COMMON) $(PROFILE)
 
 # libraries

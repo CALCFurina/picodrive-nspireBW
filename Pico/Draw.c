@@ -8,8 +8,10 @@
 
 
 #include "PicoInt.h"
-
+#include <libndls.h>
+#include <SDL/SDL.h>
 int (*PicoScan)(unsigned int num, void *data)=NULL;
+
 
 #if OVERRIDE_HIGHCOL
 static unsigned char DefHighCol[8+320+8];
@@ -33,6 +35,8 @@ int Scanline=0; // Scanline
 
 static int SpriteBlocks;
 //unsigned short ppt[] = { 0x0f11, 0x0ff1, 0x01f1, 0x011f, 0x01ff, 0x0f1f, 0x0f0e, 0x0e7c };
+
+scr_type_t CALCF_SCREEN_TYPE;
 
 struct TileStrip
 {
@@ -1179,7 +1183,7 @@ static void FinalizeLineBGR444(int sh)
   unsigned char  *ps=HighCol+8;
   unsigned short *pal=Pico.cram;
   int len, i, t;
-
+  
   if (Pico.video.reg[12]&1) {
     len = 320;
   } else {
@@ -1202,9 +1206,21 @@ static void FinalizeLineBGR444(int sh)
       Pico.m.dirtyPal = 0;
     }
   }
-
+  CALCF_SCREEN_TYPE=lcd_type();
   for(i = 0; i < len; i++)
-    pd[i] = pal[ps[i]];
+    if(CALCF_SCREEN_TYPE==SCR_320x240_565)
+        pd[i] = pal[ps[i]];
+    else
+    {
+     uint16_t c = pal[ps[i]];
+     uint16_t r = (c >> 11) & 0x1F;
+     uint16_t g = (c >> 5)  & 0x3F;
+     uint16_t b =  c        & 0x1F;
+     uint16_t g8 =15-( ((r << 2) + r + (g << 2) + (b << 1)) >> 5);
+     pd[i] = g8;
+          
+    }
+
 }
 
 
@@ -1250,8 +1266,21 @@ static void FinalizeLineRGB555(int sh)
   }
 
 #ifndef PSP
-  for (i = 0; i < len; i++)
-    pd[i] = pal[ps[i]];
+  for (i = 0; i < len; i++){
+    //CALCF_SCREEN_TYPE=lcd_type();
+    //if(CALCF_SCREEN_TYPE==SCR_320x240_565)
+    //    pd[i] = pal[ps[i]];
+    //else
+    {
+     uint16_t c = pal[ps[i]];
+     uint16_t r = (c >> 11) & 0x1F;
+     uint16_t g = (c >> 5)  & 0x3F;
+     uint16_t b =  c        & 0x1F;
+     uint16_t g8 =30-( ((r << 2) + r + (g << 2) + (b << 1)) >> 4);
+     pd[i] = g8;
+          
+    }
+  }
 #else
   {
     extern void amips_clut(unsigned short *dst, unsigned char *src, unsigned short *pal, int count);
